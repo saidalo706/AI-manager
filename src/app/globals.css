@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --canvas: 250 246 255;
+  --paper: 255 255 255;
+  --ink: 24 20 40;
+  --mute: 112 106 135;
+  --line: 226 222 242;
+  --hover: 242 239 252;
+
+  --b1: 255 90 170;   /* розовый */
+  --b2: 139 92 246;   /* фиолетовый */
+  --b3: 34 211 238;   /* циан */
+  --b4: 253 224 71;   /* лимонный */
+  --orb: 0.55;
+  --dot: 24 20 40;
+  --dot-a: 0.12;
+  --grain: 0.06;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: 8 6 18;
+    --paper: 22 19 38;
+    --ink: 245 243 255;
+    --mute: 165 160 190;
+    --line: 52 46 82;
+    --hover: 38 33 62;
+
+    --b1: 255 40 150;
+    --b2: 124 58 237;
+    --b3: 0 200 230;
+    --b4: 163 230 53;
+    --orb: 0.5;
+    --dot: 255 255 255;
+    --dot-a: 0.08;
+    --grain: 0.09;
+  }
+}
+
+body {
+  @apply bg-canvas text-ink antialiased;
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ---------- Фон: плавающие неоновые шары ---------- */
+.bg-fx {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bg-fx i {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  opacity: var(--orb);
+  will-change: transform;
+}
+.bg-fx i:nth-child(1) {
+  width: 46vmax; height: 46vmax; left: -12vmax; top: -14vmax;
+  background: radial-gradient(circle at 30% 30%, rgb(var(--b1)), rgb(var(--b2)) 70%);
+  animation: float1 22s ease-in-out infinite alternate;
+}
+.bg-fx i:nth-child(2) {
+  width: 40vmax; height: 40vmax; right: -14vmax; top: 6vh;
+  background: radial-gradient(circle at 60% 40%, rgb(var(--b3)), rgb(var(--b2)) 75%);
+  animation: float2 28s ease-in-out infinite alternate;
+}
+.bg-fx i:nth-child(3) {
+  width: 36vmax; height: 36vmax; left: 18vw; bottom: -20vmax;
+  background: radial-gradient(circle at 50% 50%, rgb(var(--b1)), rgb(var(--b3)) 80%);
+  animation: float3 26s ease-in-out infinite alternate;
+}
+.bg-fx i:nth-child(4) {
+  width: 22vmax; height: 22vmax; right: 10vw; bottom: -8vmax;
+  background: radial-gradient(circle, rgb(var(--b4)), transparent 70%);
+  opacity: calc(var(--orb) * 0.7);
+  animation: float2 18s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes float1 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(14vw, 10vh, 0) scale(1.18); }
+}
+@keyframes float2 {
+  from { transform: translate3d(0, 0, 0) scale(1.1); }
+  to   { transform: translate3d(-12vw, 14vh, 0) scale(0.92); }
+}
+@keyframes float3 {
+  from { transform: translate3d(0, 0, 0) scale(0.95); }
+  to   { transform: translate3d(10vw, -12vh, 0) scale(1.2); }
+}
+
+/* Точечная сетка + зерно поверх шаров */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgb(var(--dot) / var(--dot-a)) 1px, transparent 1.3px);
+  background-size: 24px 24px;
+}
+
+/* ---------- Draw a path ---------- */
+.draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 1.2s cubic-bezier(.65, 0, .35, 1) forwards;
+}
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* easeReverse: линия рисуется и стирается; на обратном ходу кривая тоже разворачивается */
+.bp {
+  vector-effect: non-scaling-stroke;
+  opacity: 0.5;
+}
+.draw.bp {
+  animation-name: draw;
+  animation-timing-function: cubic-bezier(.65, 0, .35, 1);
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-fill-mode: both;
+}
+
+.bg-paths { animation: pathsDrift 18s ease-in-out infinite alternate; transform-origin: center; }
+@keyframes pathsDrift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(0, -1.5%, 0) scale(1.03); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-fx i, .bg-paths { animation: none; }
+  .draw { animation-duration: 0.01s !important; animation-delay: 0s !important; }
+}
+
+button { @apply transition-all duration-150; }
+::selection { background: rgb(var(--b2) / 0.3); }
